@@ -45,7 +45,7 @@ struct Calldata {
 
 const u32 MEMORY_SIZE = 16
 const u32 PROGRAM_SIZE = 6
-const u32 CALLDATA_SIZE = 16
+const u32 CALLDATA_SIZE = 1
 // See STACK ACCESS UNDERFLOW above.
 const u32 STACK_HEAD_START = 2
 const u32 STACK_SIZE = 16
@@ -159,6 +159,7 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 		State s1 = add(s)
 		State s2 = stop(s)
 		State s3 = push(s, program)
+		State s4 = calldataload(s, calldata)
 
 		// Chose the appropriate one.
 		s = \
@@ -166,7 +167,9 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 			if (instr == ADD) then s1 else \
 			if (instr == STOP) then s2 else \
 			if (instr == PUSH) then s3 else \
+			if (instr == CALLDATALOAD) then s4 else \
 				error(s) \
+			fi \
 			fi \
 			fi \
 			fi \
@@ -179,4 +182,6 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 
 	assert(!s.error)
 	assert(!s.running)
+	//assert(memoryHash == sha256(s.memory))
+	//assert(stackHash == sha256(s.stack.value))
 	return s
