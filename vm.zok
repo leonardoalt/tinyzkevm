@@ -1,49 +1,9 @@
-from "./data.zok" import Stack, Memory, State, Program, Calldata, MEMORY_SIZE, PROGRAM_SIZE, CALLDATA_SIZE, STACK_HEAD_START, STACK_SIZE, hasAtLeast, hasAtMost, first, second, third, decrease, increase, writeTop, writeFirst, stop, error
+from "./data.zok" import Stack, Memory, State, Program, Calldata, MEMORY_SIZE, PROGRAM_SIZE, CALLDATA_SIZE, STACK_HEAD_START, STACK_SIZE, stop, error
 
-/** Opcode constants */
-
-const u32 ADD = 1
-const u32 CALLDATALOAD = 2
-const u32 STOP = 3
-const u32 PUSH = 4
-
-/*******************/
-
-
-/** Opcodes */
-
-def add(State s) -> State:
-	bool e = !s.running || !hasAtLeast::<2>(s.stack)
-	return if e then error(s) else writeFirst::<2>(s, first(s.stack) + second(s.stack)) fi
-
-// If at ANY point, ANY number >= c.values.length ends up on the stack,
-// the index access below WILL throw due to the nondeterministic calldataload
-// branch in the main interpreter loop.
-// This happens whether one uses calldataload or not.
-def calldataload(State s, Calldata c) -> State:
-	bool e = !s.running || !hasAtLeast::<1>(s.stack) || first(s.stack) >= CALLDATA_SIZE
-	return if e then error(s) else writeFirst::<1>(s, c.values[first(s.stack)]) fi
-
-def mload(State s) -> State:
-	bool e = !s.running || !hasAtLeast::<1>(s.stack) || first(s.stack) >= MEMORY_SIZE
-	return if e then error(s) else writeFirst::<1>(s, s.memory.values[first(s.stack)]) fi
-
-def mstore(State s) -> State:
-	bool e = !s.running || !hasAtLeast::<2>(s.stack) || first(s.stack) >= MEMORY_SIZE
-	s.stack = decrease::<2>(s.stack)
-	s.memory.values[first(s.stack)] = second(s.stack)
-	return if e then error(s) else s fi
-
-def push(State s, Program p) -> State:
-	s.pc = s.pc + 1
-	u32 l = STACK_SIZE + (- 2)
-	bool e = !s.running || !hasAtMost::<l>(s.stack)
-
-	u32 x = p.instructions[s.pc]
-	s.stack = writeTop(s.stack, x)
-	return if e then error(s) else s fi
+from "./opcodes.zok" import ADD, CALLDATALOAD, STOP, PUSH, add, calldataload, mload, mstore, push
 
 def main(u32 memoryHash, u32 stackHash, Program program, private Calldata calldata) -> State:
+	// Start with empty stack and empty memory.
 	State s = State {
 		stack: Stack { values: [0; STACK_SIZE + STACK_HEAD_START], length: STACK_HEAD_START },
 		memory: Memory { values: [0; MEMORY_SIZE] },
@@ -61,7 +21,7 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 		State s3 = push(s, program)
 		State s4 = calldataload(s, calldata)
 
-		// Choose the appropriate one.
+		// Choose the appropriate data path and sync.
 		s = \
 			if (!s.running) then s else \
 			if (instr == ADD) then s1 else \
@@ -76,21 +36,23 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 			fi
 
 		s.pc = if s.running then (s.pc + 1) else s.pc fi
+
 		assert(!s.error)
 
 		// Ensure that the stack guard values are not corrupted.
-		// Check up to STACK_HEAD_START.
-		assert(s.stack.values[0] == 0)
-		assert(s.stack.values[1] == 0)
+		for u32 j in 0..STACK_HEAD_START do
+			assert(s.stack.values[j] == 0)
+		endfor
 
 	endfor
 
 	assert(!s.error)
+	// Execution should have stopped.
 	assert(!s.running)
 
 	// Ensure that the stack guard values are not corrupted.
-	// Check up to STACK_HEAD_START.
-	assert(s.stack.values[0] == 0)
-	assert(s.stack.values[1] == 0)
+	for u32 j in 0..STACK_HEAD_START do
+		assert(s.stack.values[j] == 0)
+	endfor
 
 	return s

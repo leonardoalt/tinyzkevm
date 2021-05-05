@@ -30,7 +30,7 @@ struct State {
 }
 
 // Instructions size must be > PROGRAM_SIZE
-// because in the nondeterministic main loop future execution loopkup
+// because in the nondeterministic main loop future execution lookup
 // the PUSH instruction is always executed.
 // It then tries to lookup position s.pc + 1, even though s.pc might be the last.
 // Size of values must be the same as MEMORY_SIZE.
