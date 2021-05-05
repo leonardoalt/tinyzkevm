@@ -182,6 +182,10 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 
 	assert(!s.error)
 	assert(!s.running)
+	// Ensure that the stack guard values are not corrupted
+	// Check up to STACK_HEAD_START
+	assert(s.stack.values[0] == 0)
+	assert(s.stack.values[1] == 0)
 	//assert(memoryHash == sha256(s.memory))
 	//assert(stackHash == sha256(s.stack.value))
 	return s
