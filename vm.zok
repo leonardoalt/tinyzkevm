@@ -67,10 +67,10 @@ def hasAtLeast<N>(Stack s) -> bool:
 	return s.length >= STACK_HEAD_START + N
 
 def hasAtMost<N>(Stack s) -> bool:
-	return (s.length - STACK_HEAD_START) <= N
+	return (s.length + (- STACK_HEAD_START)) <= N
 
 def nth<N>(Stack s) -> u32:
-	return s.values[s.length - N]
+	return s.values[s.length + (- N)]
 
 def first(Stack s) -> u32:
 	return nth::<1>(s)
@@ -136,7 +136,7 @@ def mstore(State s) -> State:
 
 def push(State s, Program p) -> State:
 	s.pc = s.pc + 1
-	u32 l = STACK_SIZE - 2
+	u32 l = STACK_SIZE + (- 2)
 	bool e = !s.running || !hasAtMost::<l>(s.stack)
 
 	u32 x = p.instructions[s.pc]
