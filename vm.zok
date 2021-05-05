@@ -10,7 +10,8 @@
 /** Data structures */
 
 struct Stack {
-	u32[21] values
+	// STACK_SIZE + STACK_HEAD_START
+	u32[18] values
 	u32 length
 }
 
@@ -26,8 +27,12 @@ struct State {
 	bool error
 }
 
+// Instructions size must be > PROGRAM_SIZE
+// because in the nondeterministic main loop future execution loopkup
+// the PUSH instruction is always executed. It then tries to lookup
+// position s.pc + 1, even though s.pc might be the last.
 struct Program {
-	u32[2] instructions
+	u32[7] instructions
 }
 
 struct Calldata {
@@ -39,10 +44,10 @@ struct Calldata {
 /** Size constants */
 
 const u32 MEMORY_SIZE = 16
-const u32 PROGRAM_SIZE = 2
+const u32 PROGRAM_SIZE = 6
 const u32 CALLDATA_SIZE = 16
 // See STACK ACCESS UNDERFLOW above.
-const u32 STACK_HEAD_START = 5
+const u32 STACK_HEAD_START = 2
 const u32 STACK_SIZE = 16
 
 /*******************/
@@ -77,17 +82,21 @@ def third(Stack s) -> u32:
 	return nth::<3>(s)
 
 def decrease<L>(Stack s) -> Stack:
-	s.length = s.length - L
+	s.length = s.length + L
 	return s
 
 def increase<L>(Stack s) -> Stack:
 	s.length = s.length + L
 	return s
 
+def writeTop(Stack s, u32 n) -> Stack:
+	s.values[s.length] = 666
+	return s
+
 def writeFirst<L>(State s, u32 n) -> State:
-	s.stack = decrease::<L>(s.stack)
-	s.stack = increase::<1>(s.stack)
-	s.stack.values[s.stack.length - 1] = n
+	//s.stack = decrease::<L>(s.stack)
+	s.stack = writeTop(s.stack, n)
+	//s.stack = increase::<1>(s.stack)
 	return s
 
 /*******************/
@@ -108,6 +117,7 @@ def error(State s) -> State:
 
 def add(State s) -> State:
 	bool e = !s.running || !hasAtLeast::<2>(s.stack)
+	//return if e then error(s) else s fi
 	return if e then error(s) else writeFirst::<2>(s, first(s.stack) + second(s.stack)) fi
 
 def calldataload(State s, Calldata c) -> State:
@@ -125,16 +135,16 @@ def mstore(State s) -> State:
 	return if e then error(s) else s fi
 
 def push(State s, Program p) -> State:
+	s.pc = s.pc + 1
 	u32 l = STACK_SIZE - 2
 	bool e = !s.running || !hasAtMost::<l>(s.stack)
-	State s1 = s
-	s1.pc = s1.pc + 1
-	u32 x = p.instructions[s1.pc]
-	s1.stack = increase::<1>(s1.stack)
-	s1.stack.values[s1.stack.length - 1] = x
-	return if e then error(s) else s1 fi
 
-def main(u32 memoryHash, u32 stackHash, Program program, private Calldata calldata):
+	u32 x = p.instructions[s.pc]
+	s.stack.values[s.stack.length] = x
+	s.stack = increase::<1>(s.stack)
+	return if e then error(s) else s fi
+
+def main(u32 memoryHash, u32 stackHash, Program program, private Calldata calldata) -> State:
 	State s = State {
 		stack: Stack { values: [0; STACK_SIZE + STACK_HEAD_START], length: STACK_HEAD_START },
 		memory: Memory { values: [0; MEMORY_SIZE] },
@@ -145,23 +155,23 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 
 	for u32 i in 0..PROGRAM_SIZE do
 		u32 instr = program.instructions[s.pc]
-		//u32 instr = program.instructions[i]
-		//u32 instr = STOP
 
 		// Compute all possible future states nondeterministically.
-		//State s2 = stop(s)
+		State s1 = add(s)
+		State s2 = stop(s)
+		State s3 = push(s, program)
 
-		s.running = true
-		s = if (!s.running) then error(s) else s fi
 		// Chose the appropriate one.
-		/*
 		s = \
 			if (!s.running) then s else \
+			if (instr == ADD) then s1 else \
 			if (instr == STOP) then s2 else \
+			if (instr == PUSH) then s3 else \
 				error(s) \
 			fi \
+			fi \
+			fi \
 			fi
-		*/
 
 		s.pc = if s.running then (s.pc + 1) else s.pc fi
 		assert(!s.error)
@@ -169,4 +179,5 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 	endfor
 
 	assert(!s.error)
-	return
+	assert(!s.running)
+	return s
