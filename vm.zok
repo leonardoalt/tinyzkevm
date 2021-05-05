@@ -82,7 +82,7 @@ def third(Stack s) -> u32:
 	return nth::<3>(s)
 
 def decrease<L>(Stack s) -> Stack:
-	s.length = s.length + L
+	s.length = s.length + (- L)
 	return s
 
 def increase<L>(Stack s) -> Stack:
@@ -90,13 +90,13 @@ def increase<L>(Stack s) -> Stack:
 	return s
 
 def writeTop(Stack s, u32 n) -> Stack:
-	s.values[s.length] = 666
+	s.values[s.length] = n
+	s = increase::<1>(s)
 	return s
 
 def writeFirst<L>(State s, u32 n) -> State:
-	//s.stack = decrease::<L>(s.stack)
+	s.stack = decrease::<L>(s.stack)
 	s.stack = writeTop(s.stack, n)
-	//s.stack = increase::<1>(s.stack)
 	return s
 
 /*******************/
@@ -140,8 +140,7 @@ def push(State s, Program p) -> State:
 	bool e = !s.running || !hasAtMost::<l>(s.stack)
 
 	u32 x = p.instructions[s.pc]
-	s.stack.values[s.stack.length] = x
-	s.stack = increase::<1>(s.stack)
+	s.stack = writeTop(s.stack, x)
 	return if e then error(s) else s fi
 
 def main(u32 memoryHash, u32 stackHash, Program program, private Calldata calldata) -> State:
