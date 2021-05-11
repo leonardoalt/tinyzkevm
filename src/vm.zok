@@ -1,6 +1,6 @@
 from "./data.zok" import Stack, Memory, State, Program, Calldata, MEMORY_SIZE, PROGRAM_SIZE, CALLDATA_SIZE, STACK_HEAD_START, STACK_SIZE, stop, error
 
-from "./opcodes.zok" import ADD, CALLDATALOAD, STOP, PUSH, add, calldataload, mload, mstore, push
+from "./opcodes.zok" import ADD, CALLDATALOAD, STOP, PUSH32, add, calldataload, mload, mstore, push
 
 def main(u32 memoryHash, u32 stackHash, Program program, private Calldata calldata) -> State:
 	// Start with empty stack and empty memory.
@@ -26,7 +26,7 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 			if (!s.running) then s else \
 			if (instr == ADD) then s1 else \
 			if (instr == STOP) then s2 else \
-			if (instr == PUSH) then s3 else \
+			if (instr == PUSH32) then s3 else \
 			if (instr == CALLDATALOAD) then s4 else \
 				error(s) \
 			fi \

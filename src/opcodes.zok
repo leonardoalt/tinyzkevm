@@ -2,10 +2,15 @@ from "./data.zok" import Stack, Memory, State, Program, Calldata, MEMORY_SIZE, P
 
 /** Opcode constants */
 
-const u32 ADD = 1
-const u32 CALLDATALOAD = 2
-const u32 STOP = 3
-const u32 PUSH = 4
+const u32 STOP = 0x00000000
+
+const u32 ADD = 0x00000001
+
+const u32 SHA3 = 0x00000020
+
+const u32 CALLDATALOAD = 0x00000035
+
+const u32 PUSH32 = 0x0000007f
 
 /*******************/
 
