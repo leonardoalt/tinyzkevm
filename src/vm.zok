@@ -1,6 +1,6 @@
 from "./data.zok" import Stack, Memory, State, Program, Calldata, MEMORY_SIZE, PROGRAM_SIZE, CALLDATA_SIZE, STACK_HEAD_START, STACK_SIZE, stop, error
 
-from "./opcodes.zok" import STOP, ADD, JUMP, JUMPI, CALLDATALOAD, PUSH32, DUP1, SWAP1, add, pop, jump, jumpi, calldataload, mload, mstore, push, dup1, swap1
+from "./opcodes.zok" import STOP, ADD, MUL, JUMP, JUMPI, CALLDATALOAD, PUSH32, DUP1, SWAP1, add, mul, pop, jump, jumpi, calldataload, mload, mstore, push, dup1, swap1
 
 def main(u32 memoryHash, u32 stackHash, Program program, private Calldata calldata) -> State:
 	// Start with empty stack and empty memory.
@@ -18,25 +18,28 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 		// Compute all possible future states nondeterministically.
 		State s1 = stop(s)
 		State s2 = add(s)
-		State s3 = jump(s)
-		State s4 = jumpi(s)
-		State s5 = calldataload(s, calldata)
-		State s6 = push(s, program)
-		State s7 = dup1(s)
-		State s8 = swap1(s)
+		State s3 = mul(s)
+		State s4 = jump(s)
+		State s5 = jumpi(s)
+		State s6 = calldataload(s, calldata)
+		State s7 = push(s, program)
+		State s8 = dup1(s)
+		State s9 = swap1(s)
 
 		// Choose the appropriate data path and sync.
 		s = \
 			if (!s.running) then s else \
 			if (instr == STOP) then s1 else \
 			if (instr == ADD) then s2 else \
-			if (instr == JUMP) then s3 else \
-			if (instr == JUMPI) then s4 else \
-			if (instr == CALLDATALOAD) then s5 else \
-			if (instr == PUSH32) then s6 else \
-			if (instr == DUP1) then s7 else \
-			if (instr == SWAP1) then s8 else \
+			if (instr == MUL) then s3 else \
+			if (instr == JUMP) then s4 else \
+			if (instr == JUMPI) then s5 else \
+			if (instr == CALLDATALOAD) then s6 else \
+			if (instr == PUSH32) then s7 else \
+			if (instr == DUP1) then s8 else \
+			if (instr == SWAP1) then s9 else \
 				error(s) \
+			fi \
 			fi \
 			fi \
 			fi \
