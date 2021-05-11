@@ -1,6 +1,6 @@
 from "./data.zok" import Stack, Memory, State, Program, Calldata, MEMORY_SIZE, PROGRAM_SIZE, CALLDATA_SIZE, STACK_HEAD_START, STACK_SIZE, stop, error
 
-from "./opcodes.zok" import STOP, ADD, MUL, JUMP, JUMPI, CALLDATALOAD, PUSH32, DUP1, SWAP1, add, mul, pop, jump, jumpi, calldataload, mload, mstore, push, dup1, swap1
+from "./opcodes.zok" import STOP, ADD, MUL, SUB, JUMP, JUMPI, CALLDATALOAD, PUSH32, DUP1, SWAP1, add, mul, sub, pop, jump, jumpi, calldataload, mload, mstore, push, dup1, swap1
 
 def main(u32 memoryHash, u32 stackHash, Program program, private Calldata calldata) -> State:
 	// Start with empty stack and empty memory.
@@ -19,12 +19,13 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 		State s1 = stop(s)
 		State s2 = add(s)
 		State s3 = mul(s)
-		State s4 = jump(s)
-		State s5 = jumpi(s)
-		State s6 = calldataload(s, calldata)
-		State s7 = push(s, program)
-		State s8 = dup1(s)
-		State s9 = swap1(s)
+		State s4 = sub(s)
+		State s5 = jump(s)
+		State s6 = jumpi(s)
+		State s7 = calldataload(s, calldata)
+		State s8 = push(s, program)
+		State s9 = dup1(s)
+		State s10 = swap1(s)
 
 		// Choose the appropriate data path and sync.
 		s = \
@@ -32,13 +33,15 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 			if (instr == STOP) then s1 else \
 			if (instr == ADD) then s2 else \
 			if (instr == MUL) then s3 else \
-			if (instr == JUMP) then s4 else \
-			if (instr == JUMPI) then s5 else \
-			if (instr == CALLDATALOAD) then s6 else \
-			if (instr == PUSH32) then s7 else \
-			if (instr == DUP1) then s8 else \
-			if (instr == SWAP1) then s9 else \
+			if (instr == SUB) then s4 else \
+			if (instr == JUMP) then s5 else \
+			if (instr == JUMPI) then s6 else \
+			if (instr == CALLDATALOAD) then s7 else \
+			if (instr == PUSH32) then s8 else \
+			if (instr == DUP1) then s9 else \
+			if (instr == SWAP1) then s10 else \
 				error(s) \
+			fi \
 			fi \
 			fi \
 			fi \
