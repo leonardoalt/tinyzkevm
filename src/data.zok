@@ -96,6 +96,10 @@ def writeFirst<L>(State s, u32 n) -> State:
 	s.stack = writeTop(s.stack, n)
 	return s
 
+def write<L>(Stack s, u32 n) -> Stack:
+	s.values[s.length + (- L)] = n
+	return s
+
 /*******************/
 
 /** State helpers */

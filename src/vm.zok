@@ -1,6 +1,6 @@
 from "./data.zok" import Stack, Memory, State, Program, Calldata, MEMORY_SIZE, PROGRAM_SIZE, CALLDATA_SIZE, STACK_HEAD_START, STACK_SIZE, stop, error
 
-from "./opcodes.zok" import STOP, ADD, JUMP, JUMPI, CALLDATALOAD, PUSH32, DUP1, add, pop, jump, jumpi, calldataload, mload, mstore, push, dup1
+from "./opcodes.zok" import STOP, ADD, JUMP, JUMPI, CALLDATALOAD, PUSH32, DUP1, SWAP1, add, pop, jump, jumpi, calldataload, mload, mstore, push, dup1, swap1
 
 def main(u32 memoryHash, u32 stackHash, Program program, private Calldata calldata) -> State:
 	// Start with empty stack and empty memory.
@@ -23,6 +23,7 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 		State s5 = calldataload(s, calldata)
 		State s6 = push(s, program)
 		State s7 = dup1(s)
+		State s8 = swap1(s)
 
 		// Choose the appropriate data path and sync.
 		s = \
@@ -34,7 +35,9 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 			if (instr == CALLDATALOAD) then s5 else \
 			if (instr == PUSH32) then s6 else \
 			if (instr == DUP1) then s7 else \
+			if (instr == SWAP1) then s8 else \
 				error(s) \
+			fi \
 			fi \
 			fi \
 			fi \

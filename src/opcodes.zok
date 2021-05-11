@@ -1,4 +1,4 @@
-from "./data.zok" import Stack, Memory, State, Program, Calldata, MEMORY_SIZE, PROGRAM_SIZE, CALLDATA_SIZE, STACK_SIZE, hasAtLeast, hasAtMost, first, second, third, decrease, increase, writeTop, writeFirst, error
+from "./data.zok" import Stack, Memory, State, Program, Calldata, MEMORY_SIZE, PROGRAM_SIZE, CALLDATA_SIZE, STACK_SIZE, hasAtLeast, hasAtMost, first, second, third, decrease, increase, writeTop, writeFirst, write, error
 
 /** Opcode constants */
 
@@ -16,6 +16,8 @@ const u32 JUMPI = 0x00000057
 const u32 PUSH32 = 0x0000007f
 
 const u32 DUP1 = 0x00000080
+
+const u32 SWAP1 = 0x00000090
 
 /*******************/
 
@@ -77,4 +79,11 @@ def dup1(State s) -> State:
 	bool e = !s.running || !hasAtMost::<l>(s.stack)
 
 	s.stack = writeTop(s.stack, first(s.stack))
+	return if e then error(s) else s fi
+
+def swap1(State s) -> State:
+	bool e = !s.running || !hasAtLeast::<2>(s.stack)
+	u32 temp = second(s.stack)
+	s.stack = write::<2>(s.stack, first(s.stack))
+	s.stack = write::<1>(s.stack, temp)
 	return if e then error(s) else s fi
