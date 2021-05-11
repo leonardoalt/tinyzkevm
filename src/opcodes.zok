@@ -8,6 +8,8 @@ const u32 ADD = 0x00000001
 const u32 MUL = 0x00000002
 const u32 SUB = 0x00000003
 
+const u32 LT = 0x00000010
+
 const u32 SHA3 = 0x00000020
 
 const u32 CALLDATALOAD = 0x00000035
@@ -36,6 +38,11 @@ def mul(State s) -> State:
 def sub(State s) -> State:
 	bool e = !s.running || !hasAtLeast::<2>(s.stack)
 	return if e then error(s) else writeFirst::<2>(s, first(s.stack) + (- second(s.stack))) fi
+
+def lt(State s) -> State:
+	bool e = !s.running || !hasAtLeast::<2>(s.stack)
+	u32 r = if first(s.stack) < second(s.stack) then 1 else 0 fi
+	return if e then error(s) else writeFirst::<2>(s, r) fi
 
 // If at ANY point, ANY number >= c.values.length ends up on the stack,
 // the index access below WILL throw due to the nondeterministic calldataload
