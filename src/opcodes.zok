@@ -15,6 +15,8 @@ const u32 JUMPI = 0x00000057
 
 const u32 PUSH32 = 0x0000007f
 
+const u32 DUP1 = 0x00000080
+
 /*******************/
 
 /** Opcodes */
@@ -68,4 +70,11 @@ def push(State s, Program p) -> State:
 
 	u32 x = p.instructions[s.pc]
 	s.stack = writeTop(s.stack, x)
+	return if e then error(s) else s fi
+
+def dup1(State s) -> State:
+	u32 l = STACK_SIZE + (- 2)
+	bool e = !s.running || !hasAtMost::<l>(s.stack)
+
+	s.stack = writeTop(s.stack, first(s.stack))
 	return if e then error(s) else s fi
