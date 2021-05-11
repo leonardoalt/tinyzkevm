@@ -10,6 +10,9 @@ const u32 SHA3 = 0x00000020
 
 const u32 CALLDATALOAD = 0x00000035
 
+const u32 JUMP = 0x00000056
+const u32 JUMPI = 0x00000057
+
 const u32 PUSH32 = 0x0000007f
 
 /*******************/
@@ -29,6 +32,24 @@ def add(State s) -> State:
 def calldataload(State s, Calldata c) -> State:
 	bool e = !s.running || !hasAtLeast::<1>(s.stack) || first(s.stack) >= CALLDATA_SIZE
 	return if e then error(s) else writeFirst::<1>(s, c.values[first(s.stack)]) fi
+
+
+def pop(State s) -> State:
+	bool e = !s.running || !hasAtLeast::<1>(s.stack)
+	s.stack = decrease::<1>(s.stack)
+	return if e then error(s) else s fi
+
+def jump(State s) -> State:
+	bool e = !s.running || !hasAtLeast::<1>(s.stack) || first(s.stack) >= PROGRAM_SIZE
+	s.pc = first(s.stack) + (- 1)
+	s = pop(s)
+	return if e then error(s) else s fi
+
+def jumpi(State s) -> State:
+	bool e = !s.running || !hasAtLeast::<2>(s.stack) || first(s.stack) >= PROGRAM_SIZE
+	s.pc = if second(s.stack) != 0x00000000 then (first(s.stack) + (- 1)) else s.pc fi
+	s.stack = decrease::<2>(s.stack)
+	return if e then error(s) else s fi
 
 def mload(State s) -> State:
 	bool e = !s.running || !hasAtLeast::<1>(s.stack) || first(s.stack) >= MEMORY_SIZE
