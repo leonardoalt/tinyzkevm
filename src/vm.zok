@@ -1,6 +1,6 @@
 from "./data.zok" import Stack, Memory, State, Program, Calldata, MEMORY_SIZE, PROGRAM_SIZE, CALLDATA_SIZE, STACK_HEAD_START, STACK_SIZE, stop, error
 
-from "./opcodes.zok" import STOP, ADD, MUL, SUB, LT, JUMP, JUMPI, CALLDATALOAD, POP, PUSH32, DUP1, SWAP1, add, mul, sub, lt, jump, jumpi, calldataload, pop, mload, mstore, push, dup1, swap1
+from "./opcodes.zok" import STOP, ADD, MUL, SUB, LT, EQ, JUMP, JUMPI, CALLDATALOAD, POP, PUSH32, DUP1, SWAP1, add, mul, sub, lt, eq, jump, jumpi, calldataload, pop, mload, mstore, push, dup1, swap1
 
 def main(u32 memoryHash, u32 stackHash, Program program, private Calldata calldata) -> State:
 	// Start with empty stack and empty memory.
@@ -21,13 +21,14 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 		State s3 = mul(s)
 		State s4 = sub(s)
 		State s5 = lt(s)
-		State s6 = jump(s)
-		State s7 = jumpi(s)
-		State s8 = calldataload(s, calldata)
-		State s9 = pop(s)
-		State s10 = push(s, program)
-		State s11 = dup1(s)
-		State s12 = swap1(s)
+		State s6 = eq(s)
+		State s7 = jump(s)
+		State s8 = jumpi(s)
+		State s9 = calldataload(s, calldata)
+		State s10 = pop(s)
+		State s11 = push(s, program)
+		State s12 = dup1(s)
+		State s13 = swap1(s)
 
 		// Choose the appropriate data path and sync.
 		s = \
@@ -37,14 +38,16 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 			if (instr == MUL) then s3 else \
 			if (instr == SUB) then s4 else \
 			if (instr == LT) then s5 else \
-			if (instr == JUMP) then s6 else \
-			if (instr == JUMPI) then s7 else \
-			if (instr == CALLDATALOAD) then s8 else \
-			if (instr == POP) then s9 else \
-			if (instr == PUSH32) then s10 else \
-			if (instr == DUP1) then s11 else \
-			if (instr == SWAP1) then s12 else \
+			if (instr == EQ) then s6 else \
+			if (instr == JUMP) then s7 else \
+			if (instr == JUMPI) then s8 else \
+			if (instr == CALLDATALOAD) then s9 else \
+			if (instr == POP) then s10 else \
+			if (instr == PUSH32) then s11 else \
+			if (instr == DUP1) then s12 else \
+			if (instr == SWAP1) then s13 else \
 				error(s) \
+			fi \
 			fi \
 			fi \
 			fi \
