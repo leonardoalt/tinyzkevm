@@ -5,11 +5,16 @@ from "./opcodes.zok" import STOP, ADD, MUL, SUB, LT, EQ, JUMP, JUMPI, CALLDATALO
 def main(u32 memoryHash, u32 stackHash, Program program, private Calldata calldata) -> State:
 	// Start with empty stack and empty memory.
 	State s = State {
-		stack: Stack { values: [0; STACK_SIZE + STACK_HEAD_START], length: STACK_HEAD_START },
+		// Uncomment this to crash \/ with PROGRAM_SIZE = 44
+		//stack: Stack { values: [0; STACK_SIZE + STACK_HEAD_START], length: STACK_HEAD_START },
+		stack: Stack { values: [0, 0, 4, 3, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], length: 8 },
 		memory: Memory { values: [0; MEMORY_SIZE] },
-		pc: 0,
+		// Uncomment this to crash \/ with PROGRAM_SIZE = 44
+		//pc: 0,
+		pc: 0x0000000e,
 		running: true,
-		error: false
+		error: false,
+		flag: 1
 	}
 
 	for u32 i in 0..PROGRAM_SIZE do
@@ -75,7 +80,7 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 
 	assert(!s.error)
 	// Execution should have stopped.
-	assert(!s.running)
+	//assert(!s.running)
 
 	// Ensure that the stack guard values are not corrupted.
 	for u32 j in 0..STACK_HEAD_START do

@@ -40,11 +40,14 @@ def mul(State s) -> State:
 
 def sub(State s) -> State:
 	bool e = !s.running || !hasAtLeast::<2>(s.stack)
-	return if e then error(s) else writeFirst::<2>(s, first(s.stack) + (- second(s.stack))) fi
+	s.flag = second(s.stack)
+	// This crashes \/ when not loading the state (using initial)
+	return if e then error(s) else writeFirst::<2>(s, first(s.stack) - second(s.stack)) fi
+	//return if e then error(s) else writeFirst::<2>(s, first(s.stack) - 1) fi
 
 def lt(State s) -> State:
 	bool e = !s.running || !hasAtLeast::<2>(s.stack)
-	u32 r = if first(s.stack) < second(s.stack) then 1 else 0 fi
+	u32 r = if first(s.stack) == second(s.stack) then 1 else 0 fi
 	return if e then error(s) else writeFirst::<2>(s, r) fi
 
 def eq(State s) -> State:
@@ -69,7 +72,7 @@ def pop(State s) -> State:
 
 def jump(State s) -> State:
 	bool e = !s.running || !hasAtLeast::<1>(s.stack) || first(s.stack) >= PROGRAM_SIZE
-	s.pc = first(s.stack) + (- 1)
+	s.pc = if first(s.stack) == 0 then 0 else first(s.stack) + (- 1) fi
 	s = pop(s)
 	return if e then error(s) else s fi
 
