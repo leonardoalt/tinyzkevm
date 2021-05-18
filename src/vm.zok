@@ -1,23 +1,52 @@
-from "./data.zok" import Stack, Memory, State, Program, Calldata, MEMORY_SIZE, PROGRAM_SIZE, CALLDATA_SIZE, STACK_HEAD_START, STACK_SIZE, stop, error
+from "./data.zok" import Stack, Memory, State, Program, Calldata, MEMORY_SIZE, PROGRAM_SIZE, PROGRAM_ITERATIONS, CALLDATA_SIZE, STACK_HEAD_START, STACK_SIZE, stop, error
 
 from "./opcodes.zok" import STOP, ADD, MUL, SUB, LT, EQ, JUMP, JUMPI, CALLDATALOAD, POP, PUSH32, DUP1, SWAP1, add, mul, sub, lt, eq, jump, jumpi, calldataload, pop, mload, mstore, push, dup1, swap1
 
 def main(u32 memoryHash, u32 stackHash, Program program, private Calldata calldata) -> State:
 	// Start with empty stack and empty memory.
 	State s = State {
-		// Uncomment this to crash \/ with PROGRAM_SIZE = 44
+		// Uncomment this to crash \/ with PROGRAM_ITERATIONS = 44
 		//stack: Stack { values: [0; STACK_SIZE + STACK_HEAD_START], length: STACK_HEAD_START },
-		stack: Stack { values: [0, 0, 4, 3, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], length: 8 },
+		// After 43 steps:
+		//stack: Stack { values: [0, 0, 4, 3, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], length: 8 },
+		// After 33 steps:
+		//stack: Stack { values: [0, 0, 4, 3, 2, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], length: 6 },
+		// After 23 steps:
+		//stack: Stack { values: [0, 0, 4, 3, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], length: 6 },
+		// After 13 steps:
+		//stack: Stack { values: [0, 0, 4, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], length: 4 },
+		// After 6 steps:
+		//stack: Stack { values: [0, 0, 4, 0, 0x00000012, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], length: 5 },
+		// After 10 steps:
+		//stack: Stack { values: [0, 0, 4, 1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], length: 5 },
+		// After 8 steps:
+		//stack: Stack { values: [0, 0, 4, 4, 0x00000012, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], length: 4 },
+		// After 9 steps:
+		stack: Stack { values: [0, 0, 4, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], length: 5 },
 		memory: Memory { values: [0; MEMORY_SIZE] },
-		// Uncomment this to crash \/ with PROGRAM_SIZE = 44
+		// Uncomment this to crash \/ with PROGRAM_ITERATIONS = 44
 		//pc: 0,
-		pc: 0x0000000e,
+		// After 43 steps:
+		//pc: 0x0000000e,
+		// After 33 steps:
+		//pc: 0x0000000f,
+		// After 23 steps:
+		//pc: 0x00000011,
+		// After 13 steps:
+		//pc: 0x00000003,
+		// After 6 steps:
+		//pc: 0x00000009,
+		// After 10 steps:
+		//pc: 0x0000000e,
+		// After 8 steps:
+		//pc: 0x0000000b,
+		// After 9 steps:
+		pc: 0x0000000d,
 		running: true,
-		error: false,
-		flag: 1
+		error: false
 	}
 
-	for u32 i in 0..PROGRAM_SIZE do
+	for u32 i in 0..PROGRAM_ITERATIONS do
 		u32 instr = program.instructions[s.pc]
 
 		// Compute all possible future states nondeterministically.

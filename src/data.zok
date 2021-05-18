@@ -27,7 +27,6 @@ struct State {
 	u32 pc
 	bool running
 	bool error
-	u32 flag
 }
 
 // Instructions size must be > PROGRAM_SIZE
@@ -52,11 +51,12 @@ struct Calldata {
 
 const u32 MEMORY_SIZE = 16
 // To see the state before it crashes uncomment this and do not load the state (use the 0 initial in vm.zok)
-//const u32 PROGRAM_SIZE = 43
+const u32 PROGRAM_SIZE = 20
+
 // To crash do this \/ without loading the state
-//const u32 PROGRAM_SIZE = 44
+//const u32 PROGRAM_ITERATIONS = 44
 // If you load the state, this runs the one iteration that fails when you use 44
-const u32 PROGRAM_SIZE = 1
+const u32 PROGRAM_ITERATIONS = 35
 
 const u32 CALLDATA_SIZE = 16
 

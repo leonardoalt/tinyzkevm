@@ -40,7 +40,6 @@ def mul(State s) -> State:
 
 def sub(State s) -> State:
 	bool e = !s.running || !hasAtLeast::<2>(s.stack)
-	s.flag = second(s.stack)
 	// This crashes \/ when not loading the state (using initial)
 	return if e then error(s) else writeFirst::<2>(s, first(s.stack) - second(s.stack)) fi
 	//return if e then error(s) else writeFirst::<2>(s, first(s.stack) - 1) fi
