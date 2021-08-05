@@ -6,7 +6,7 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 	// Start with empty stack and empty memory.
 	State s = State {
 		// Uncomment this to crash \/ with PROGRAM_ITERATIONS = 44
-		//stack: Stack { values: [0; STACK_SIZE + STACK_HEAD_START], length: STACK_HEAD_START },
+		stack: Stack { values: [0; STACK_SIZE + STACK_HEAD_START], length: STACK_HEAD_START },
 		// After 43 steps:
 		//stack: Stack { values: [0, 0, 4, 3, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], length: 8 },
 		// After 33 steps:
@@ -22,10 +22,10 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 		// After 8 steps:
 		//stack: Stack { values: [0, 0, 4, 4, 0x00000012, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], length: 4 },
 		// After 9 steps:
-		stack: Stack { values: [0, 0, 4, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], length: 5 },
+		//stack: Stack { values: [0, 0, 4, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], length: 5 },
 		memory: Memory { values: [0; MEMORY_SIZE] },
 		// Uncomment this to crash \/ with PROGRAM_ITERATIONS = 44
-		//pc: 0,
+		pc: 0,
 		// After 43 steps:
 		//pc: 0x0000000e,
 		// After 33 steps:
@@ -41,7 +41,7 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 		// After 8 steps:
 		//pc: 0x0000000b,
 		// After 9 steps:
-		pc: 0x0000000d,
+		//pc: 0x0000000d,
 		running: true,
 		error: false
 	}
@@ -101,9 +101,11 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 		assert(!s.error)
 
 		// Ensure that the stack guard values are not corrupted.
+		/*
 		for u32 j in 0..STACK_HEAD_START do
 			assert(s.stack.values[j] == 0)
 		endfor
+		*/
 
 	endfor
 
@@ -112,8 +114,10 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 	//assert(!s.running)
 
 	// Ensure that the stack guard values are not corrupted.
+	/*
 	for u32 j in 0..STACK_HEAD_START do
 		assert(s.stack.values[j] == 0)
 	endfor
+	*/
 
 	return s

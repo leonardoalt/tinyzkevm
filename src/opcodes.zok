@@ -30,29 +30,45 @@ const u32 SWAP1 = 0x00000090
 
 /** Opcodes */
 
+def add_true(State s) -> State:
+	return writeFirst::<2>(s, first(s.stack) + second(s.stack))
+
 def add(State s) -> State:
 	bool e = !s.running || !hasAtLeast::<2>(s.stack)
-	return if e then error(s) else writeFirst::<2>(s, first(s.stack) + second(s.stack)) fi
+	return if e then error(s) else add_true(s) fi
+
+def mul_true(State s) -> State:
+	return writeFirst::<2>(s, first(s.stack) * second(s.stack))
 
 def mul(State s) -> State:
 	bool e = !s.running || !hasAtLeast::<2>(s.stack)
-	return if e then error(s) else writeFirst::<2>(s, first(s.stack) * second(s.stack)) fi
+	return if e then error(s) else mul_true(s) fi
+
+def sub_true(State s) -> State:
+	return writeFirst::<2>(s, first(s.stack) - second(s.stack))
 
 def sub(State s) -> State:
 	bool e = !s.running || !hasAtLeast::<2>(s.stack)
 	// This crashes \/ when not loading the state (using initial)
-	return if e then error(s) else writeFirst::<2>(s, first(s.stack) - second(s.stack)) fi
+	// I have no idea what this /\ means anymore
+	return if e then error(s) else sub_true(s) fi
 	//return if e then error(s) else writeFirst::<2>(s, first(s.stack) - 1) fi
+
+def lt_true(State s) -> State:
+	u32 r = if first(s.stack) == second(s.stack) then 1 else 0 fi
+	return writeFirst::<2>(s, r)
 
 def lt(State s) -> State:
 	bool e = !s.running || !hasAtLeast::<2>(s.stack)
+	return if e then error(s) else lt_true(s) fi
+
+def eq_true(State s) -> State:
 	u32 r = if first(s.stack) == second(s.stack) then 1 else 0 fi
-	return if e then error(s) else writeFirst::<2>(s, r) fi
+	return writeFirst::<2>(s, r)
 
 def eq(State s) -> State:
 	bool e = !s.running || !hasAtLeast::<2>(s.stack)
-	u32 r = if first(s.stack) == second(s.stack) then 1 else 0 fi
-	return if e then error(s) else writeFirst::<2>(s, r) fi
+	return if e then error(s) else eq_true(s) fi
 
 // If at ANY point, ANY number >= c.values.length ends up on the stack,
 // the index access below WILL throw due to the nondeterministic calldataload
@@ -60,26 +76,51 @@ def eq(State s) -> State:
 // This happens whether one uses calldataload or not.
 // The workaround for this is to use a patched ZoKrates that does not throw
 // at out of bounds, and make sure the actual execution does not reach that.
+
+def calldataload_true(State s, Calldata c) -> State:
+	return writeFirst::<1>(s, c.values[first(s.stack)])
+
+def calldataload_check_1(State s, Calldata c) -> State:
+	bool e = first(s.stack) >= CALLDATA_SIZE
+	return if e then error(s) else calldataload_true(s, c) fi
+
 def calldataload(State s, Calldata c) -> State:
-	bool e = !s.running || !hasAtLeast::<1>(s.stack) || first(s.stack) >= CALLDATA_SIZE
-	return if e then error(s) else writeFirst::<1>(s, c.values[first(s.stack)]) fi
+	bool e = !s.running || !hasAtLeast::<1>(s.stack)
+	return if e then error(s) else calldataload_check_1(s, c) fi
+
+def pop_true(State s) -> State:
+	s.stack = decrease::<1>(s.stack)
+	return s
 
 def pop(State s) -> State:
 	bool e = !s.running || !hasAtLeast::<1>(s.stack)
-	s.stack = decrease::<1>(s.stack)
-	return if e then error(s) else s fi
+	return if e then error(s) else pop_true(s) fi
+
+def jump_true(State s) -> State:
+	s.pc = if first(s.stack) == 0 then 0 else (first(s.stack) - 1) fi
+	return pop(s)
+
+def jump_check_1(State s) -> State:
+	bool e = first(s.stack) >= PROGRAM_SIZE
+	return if e then error(s) else jump_true(s) fi
 
 def jump(State s) -> State:
-	bool e = !s.running || !hasAtLeast::<1>(s.stack) || first(s.stack) >= PROGRAM_SIZE
-	s.pc = if first(s.stack) == 0 then 0 else first(s.stack) + (- 1) fi
-	s = pop(s)
-	return if e then error(s) else s fi
+	bool e = !s.running || !hasAtLeast::<1>(s.stack)
+	return if e then error(s) else jump_check_1(s) fi
+
+def jumpi_true(State s) -> State:
+	// I don't remember why operand - 1
+	s.pc = if second(s.stack) != 0x00000000 then (first(s.stack) - 1) else s.pc fi
+	s.stack = decrease::<2>(s.stack)
+	return s
+
+def jumpi_check_1(State s) -> State:
+	bool e = first(s.stack) >= PROGRAM_SIZE
+	return if e then error(s) else jumpi_true(s) fi
 
 def jumpi(State s) -> State:
-	bool e = !s.running || !hasAtLeast::<2>(s.stack) || first(s.stack) >= PROGRAM_SIZE
-	s.pc = if second(s.stack) != 0x00000000 then (first(s.stack) + (- 1)) else s.pc fi
-	s.stack = decrease::<2>(s.stack)
-	return if e then error(s) else s fi
+	bool e = !s.running || !hasAtLeast::<2>(s.stack)
+	return if e then error(s) else jumpi_check_1(s) fi
 
 def mload(State s) -> State:
 	bool e = !s.running || !hasAtLeast::<1>(s.stack) || first(s.stack) >= MEMORY_SIZE
@@ -91,25 +132,36 @@ def mstore(State s) -> State:
 	s.memory.values[first(s.stack)] = second(s.stack)
 	return if e then error(s) else s fi
 
-def push(State s, Program p) -> State:
+def push_true(State s, Program p) -> State:
 	s.pc = s.pc + 1
-	u32 l = STACK_SIZE + (- 2)
-	bool e = !s.running || !hasAtMost::<l>(s.stack)
-
 	u32 x = p.instructions[s.pc]
 	s.stack = writeTop(s.stack, x)
-	return if e then error(s) else s fi
+	return s
+
+def push_check_1(State s, Program p) -> State:
+	bool e = (s.pc + 1) >= PROGRAM_SIZE
+	return if e then error(s) else push_true(s, p) fi
+
+def push(State s, Program p) -> State:
+	u32 l = STACK_SIZE - 2
+	bool e = !s.running || !hasAtMost::<l>(s.stack)
+	return if e then error(s) else push_check_1(s, p) fi
+
+def dup1_true(State s) -> State:
+	s.stack = writeTop(s.stack, first(s.stack))
+	return s
 
 def dup1(State s) -> State:
-	u32 l = STACK_SIZE + (- 2)
-	bool e = !s.running || !hasAtMost::<l>(s.stack)
+	u32 l = STACK_SIZE - 2
+	bool e = !s.running || !hasAtLeast::<1>(s.stack) || !hasAtMost::<l>(s.stack)
+	return if e then error(s) else dup1_true(s) fi
 
-	s.stack = writeTop(s.stack, first(s.stack))
-	return if e then error(s) else s fi
-
-def swap1(State s) -> State:
-	bool e = !s.running || !hasAtLeast::<2>(s.stack)
+def swap1_true(State s) -> State:
 	u32 temp = second(s.stack)
 	s.stack = write::<2>(s.stack, first(s.stack))
 	s.stack = write::<1>(s.stack, temp)
-	return if e then error(s) else s fi
+	return s
+
+def swap1(State s) -> State:
+	bool e = !s.running || !hasAtLeast::<2>(s.stack) || !hasAtLeast::<2>(s.stack)
+	return if e then error(s) else swap1_true(s) fi
