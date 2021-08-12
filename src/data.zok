@@ -1,17 +1,8 @@
 /** Data structures */
 
-// Size of values must be STACK_SIZE + STACK_HEAD_START
 // ZoKrates does not support constants here yet.
-// STACK ACCESS UNDERFLOW:
-// The circuit form means that every branch is "executed" regardless of
-// the branch conditions. This means that the code will try to read from
-// the stack even when the stack is empty. This leads to exceptions being
-// thrown even when everything is fine.
-// To aid that, we give the stack a buffer of size STACK_HEAD_START, so that no stack read
-// operation underflows. This only leads to wrong data, which is fine
-// since the final data is restricted by the branch conditions.
 struct Stack {
-	u32[18] values
+	u32[16] values
 	u32 length
 }
 
@@ -29,20 +20,19 @@ struct State {
 	bool error
 }
 
-// Instructions size must be > PROGRAM_SIZE
-// because in the nondeterministic main loop future execution lookup
-// the PUSH instruction is always executed.
-// It then tries to lookup position s.pc + 1, even though s.pc might be the last.
-// Size of values must be the same as MEMORY_SIZE.
+// Instructions size must be the same as PROGRAM_SIZE.
 // ZoKrates does not support constants here yet.
 struct Program {
-	u32[41] instructions
+	// Uncomment this for old smaller tests \/
+	//u32[17] instructions
+	// Uncomment this for dec test \/
+	u32[19] instructions
 }
 
 // Size of values must be the same as CALLDATA_SIZE.
 // ZoKrates does not support constants here yet.
 struct Calldata {
-	u32[16] values
+	u32[19] values
 }
 
 /*******************/
@@ -50,10 +40,20 @@ struct Calldata {
 /** Size constants */
 
 const u32 MEMORY_SIZE = 16
-const u32 PROGRAM_SIZE = 40
-const u32 CALLDATA_SIZE = 16
+// To see the state before it crashes uncomment this and do not load the state (use the 0 initial in vm.zok)
+// Uncomment this for old smaller tests \/
+//const u32 PROGRAM_SIZE = 17
+// Uncomment this for dec test \/
+const u32 PROGRAM_SIZE = 30
 
-const u32 STACK_HEAD_START = 2
+// To crash do this \/ without loading the state
+const u32 PROGRAM_ITERATIONS = 1
+// If you load the state, this runs the one iteration that fails when you use 44
+//const u32 PROGRAM_ITERATIONS = 20
+
+const u32 CALLDATA_SIZE = 19
+
+const u32 STACK_HEAD_START = 0
 const u32 STACK_SIZE = 16
 
 /*******************/
@@ -79,7 +79,7 @@ def third(Stack s) -> u32:
 	return nth::<3>(s)
 
 def decrease<L>(Stack s) -> Stack:
-	s.length = s.length + (- L)
+	s.length = if s.length >= L then s.length + (- L) else STACK_HEAD_START fi
 	return s
 
 def increase<L>(Stack s) -> Stack:
