@@ -1,15 +1,6 @@
 /** Data structures */
 
-// Size of values must be STACK_SIZE + STACK_HEAD_START
 // ZoKrates does not support constants here yet.
-// STACK ACCESS UNDERFLOW:
-// The circuit form means that every branch is "executed" regardless of
-// the branch conditions. This means that the code will try to read from
-// the stack even when the stack is empty. This leads to exceptions being
-// thrown even when everything is fine.
-// To aid that, we give the stack a buffer of size STACK_HEAD_START, so that no stack read
-// operation underflows. This only leads to wrong data, which is fine
-// since the final data is restricted by the branch conditions.
 struct Stack {
 	u32[16] values
 	u32 length
@@ -29,11 +20,7 @@ struct State {
 	bool error
 }
 
-// Instructions size must be > PROGRAM_SIZE
-// because in the nondeterministic main loop future execution lookup
-// the PUSH instruction is always executed.
-// It then tries to lookup position s.pc + 1, even though s.pc might be the last.
-// Size of values must be the same as MEMORY_SIZE.
+// Instructions size must be the same as PROGRAM_SIZE.
 // ZoKrates does not support constants here yet.
 struct Program {
 	// Uncomment this for old smaller tests \/
@@ -57,10 +44,10 @@ const u32 MEMORY_SIZE = 16
 // Uncomment this for old smaller tests \/
 //const u32 PROGRAM_SIZE = 17
 // Uncomment this for dec test \/
-const u32 PROGRAM_SIZE = 19
+const u32 PROGRAM_SIZE = 30
 
 // To crash do this \/ without loading the state
-const u32 PROGRAM_ITERATIONS = 44
+const u32 PROGRAM_ITERATIONS = 1
 // If you load the state, this runs the one iteration that fails when you use 44
 //const u32 PROGRAM_ITERATIONS = 20
 

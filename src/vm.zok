@@ -1,6 +1,6 @@
 from "./data.zok" import Stack, Memory, State, Program, Calldata, MEMORY_SIZE, PROGRAM_SIZE, PROGRAM_ITERATIONS, CALLDATA_SIZE, STACK_HEAD_START, STACK_SIZE, stop, error
 
-from "./opcodes.zok" import STOP, ADD, MUL, SUB, LT, EQ, JUMP, JUMPI, CALLDATALOAD, POP, PUSH32, DUP1, SWAP1, add, mul, sub, lt, eq, jump, jumpi, calldataload, pop, mload, mstore, push, dup1, swap1
+from "./opcodes.zok" import STOP, ADD, MUL, SUB, LT, EQ, JUMP, JUMPI, CALLDATALOAD, POP, PUSH32, DUP1, DUP2, DUP3, SWAP1, add, mul, sub, lt, eq, jump, jumpi, calldataload, pop, mload, mstore, push, dup1, dup2, dup3, swap1
 
 def main(u32 memoryHash, u32 stackHash, Program program, private Calldata calldata) -> State:
 	// Start with empty stack and empty memory.
@@ -62,7 +62,9 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 		State s10 = pop(s)
 		State s11 = push(s, program)
 		State s12 = dup1(s)
-		State s13 = swap1(s)
+		State s13 = dup2(s)
+		State s14 = dup3(s)
+		State s15 = swap1(s)
 
 		// Choose the appropriate data path and sync.
 		s = \
@@ -79,8 +81,12 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 			if (instr == POP) then s10 else \
 			if (instr == PUSH32) then s11 else \
 			if (instr == DUP1) then s12 else \
-			if (instr == SWAP1) then s13 else \
+			if (instr == DUP2) then s13 else \
+			if (instr == DUP3) then s14 else \
+			if (instr == SWAP1) then s15 else \
 				error(s) \
+			fi \
+			fi \
 			fi \
 			fi \
 			fi \
@@ -100,24 +106,10 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 
 		assert(!s.error)
 
-		// Ensure that the stack guard values are not corrupted.
-		/*
-		for u32 j in 0..STACK_HEAD_START do
-			assert(s.stack.values[j] == 0)
-		endfor
-		*/
-
 	endfor
 
 	assert(!s.error)
 	// Execution should have stopped.
 	//assert(!s.running)
-
-	// Ensure that the stack guard values are not corrupted.
-	/*
-	for u32 j in 0..STACK_HEAD_START do
-		assert(s.stack.values[j] == 0)
-	endfor
-	*/
 
 	return s

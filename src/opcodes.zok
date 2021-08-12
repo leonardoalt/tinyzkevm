@@ -23,6 +23,8 @@ const u32 JUMPI = 0x00000057
 const u32 PUSH32 = 0x0000007f
 
 const u32 DUP1 = 0x00000080
+const u32 DUP2 = 0x00000081
+const u32 DUP3 = 0x00000082
 
 const u32 SWAP1 = 0x00000090
 
@@ -49,10 +51,7 @@ def sub_true(State s) -> State:
 
 def sub(State s) -> State:
 	bool e = !s.running || !hasAtLeast::<2>(s.stack)
-	// This crashes \/ when not loading the state (using initial)
-	// I have no idea what this /\ means anymore
 	return if e then error(s) else sub_true(s) fi
-	//return if e then error(s) else writeFirst::<2>(s, first(s.stack) - 1) fi
 
 def lt_true(State s) -> State:
 	u32 r = if first(s.stack) == second(s.stack) then 1 else 0 fi
@@ -69,13 +68,6 @@ def eq_true(State s) -> State:
 def eq(State s) -> State:
 	bool e = !s.running || !hasAtLeast::<2>(s.stack)
 	return if e then error(s) else eq_true(s) fi
-
-// If at ANY point, ANY number >= c.values.length ends up on the stack,
-// the index access below WILL throw due to the nondeterministic calldataload
-// branch in the main interpreter loop.
-// This happens whether one uses calldataload or not.
-// The workaround for this is to use a patched ZoKrates that does not throw
-// at out of bounds, and make sure the actual execution does not reach that.
 
 def calldataload_true(State s, Calldata c) -> State:
 	return writeFirst::<1>(s, c.values[first(s.stack)])
@@ -110,6 +102,7 @@ def jump(State s) -> State:
 
 def jumpi_true(State s) -> State:
 	// I don't remember why operand - 1
+	// Ah because pc gets increased anyway after
 	s.pc = if second(s.stack) != 0x00000000 then (first(s.stack) - 1) else s.pc fi
 	s.stack = decrease::<2>(s.stack)
 	return s
@@ -155,6 +148,24 @@ def dup1(State s) -> State:
 	u32 l = STACK_SIZE - 2
 	bool e = !s.running || !hasAtLeast::<1>(s.stack) || !hasAtMost::<l>(s.stack)
 	return if e then error(s) else dup1_true(s) fi
+
+def dup2_true(State s) -> State:
+	s.stack = writeTop(s.stack, second(s.stack))
+	return s
+
+def dup2(State s) -> State:
+	u32 l = STACK_SIZE - 2
+	bool e = !s.running || !hasAtLeast::<2>(s.stack) || !hasAtMost::<l>(s.stack)
+	return if e then error(s) else dup2_true(s) fi
+
+def dup3_true(State s) -> State:
+	s.stack = writeTop(s.stack, third(s.stack))
+	return s
+
+def dup3(State s) -> State:
+	u32 l = STACK_SIZE - 2
+	bool e = !s.running || !hasAtLeast::<3>(s.stack) || !hasAtMost::<l>(s.stack)
+	return if e then error(s) else dup3_true(s) fi
 
 def swap1_true(State s) -> State:
 	u32 temp = second(s.stack)
