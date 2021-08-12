@@ -10,11 +10,11 @@ program are very small.
 Compiling
 =========
 
-In order to compile TinyZKEVM you need a
-[custom ZoKrates](https://github.com/leonardoalt/ZoKrates/tree/zkevm_patch), then:
+In order to compile TinyZKEVM you need a version of ZoKrates that has the
+`--isolate-branches` compilation feature, then:
 
 ```
-$ zokrates -i src/vm.zok
+$ make
 ```
 
 In order to compute an execution witness, the VM takes 4 arguments:
@@ -45,8 +45,10 @@ The size of `instructions` and `values` must match the data structures in `src/d
 Then run:
 
 ```
-$ cat input.json | zokrates compute-witness --stdin --abi --verbose
+$ ./test.sh input
 ```
+where your file is called `input.json`.
+
 
 TODOs
 =====
