@@ -35,7 +35,15 @@ def formatNumberAsHexBytes(n):
 
 def compile_asm(lines):
 	instructions = []
-	for line in lines:
+	values = []
+	for i, line in enumerate(lines):
+		if line.startswith('// values: '):
+			if i < len(lines) - 1:
+				raise Exception('Calldata values must be specified at the end of the file.')
+			calldata = line.split('values: ')[1]
+			values = [formatNumberAsHexBytes(int(v)) for v in calldata.split(' ')]
+			continue
+
 		line = line.replace('\n', '')
 		args = line.split(' ')
 		if len(args) == 0:
@@ -53,7 +61,7 @@ def compile_asm(lines):
 				raise Exception('Opcode \"push32\" needs an argument.')
 			instructions.append(formatNumberAsHexBytes(int(args[1])))
 
-	return instructions
+	return (instructions, values)
 
 if __name__ == '__main__':
 	if len(sys.argv) != 2:
@@ -61,12 +69,17 @@ if __name__ == '__main__':
 		sys.exit(1)
 
 	fname = sys.argv[1]
-	instructions = compile_asm(open(fname, 'r').readlines())
+	(instructions, values) = compile_asm(open(fname, 'r').readlines())
 
 	if len(instructions) > program_size:
 		raise Exception('Programs larger than 32 instructions are not supported.')
 	if len(instructions) < program_size:
 		instructions.extend((program_size - len(instructions)) * [formatNumberAsHexBytes(opcodes['stop'])])
+
+	if len(values) > calldata_size:
+		raise Exception('Calldata larger than 32 values is not supported.')
+	if len(values) < calldata_size:
+		values.extend((calldata_size - len(values)) * [formatNumberAsHexBytes(0)])
 
 	zkInput = []
 	# Memory hash 
@@ -76,6 +89,6 @@ if __name__ == '__main__':
 	# Instructions
 	zkInput.append({"instructions": instructions})
 	# Calldata
-	zkInput.append({"values": calldata_size * [formatNumberAsHexBytes(0)]})
+	zkInput.append({"values": values})
 
 	print(json.dumps(zkInput, indent=4))
