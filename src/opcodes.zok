@@ -32,6 +32,10 @@ const u32 SWAP1 = 0x00000090
 
 /** Opcodes */
 
+def stop(State s) -> State:
+	s.running = false
+	return s
+
 def add_true(State s) -> State:
 	return writeFirst::<2>(s, first(s.stack) + second(s.stack))
 
