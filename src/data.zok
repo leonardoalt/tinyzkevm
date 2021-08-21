@@ -5,7 +5,7 @@ const u32 MEMORY_SIZE = 16
 const u32 CALLDATA_SIZE = 32
 
 const u32 PROGRAM_SIZE = 32
-const u32 PROGRAM_ITERATIONS = 16
+const u32 PROGRAM_ITERATIONS = 32
 
 /*******************/
 

@@ -5,10 +5,17 @@
 localExit()
 {
 	rm $tmpfile
+
+	if [[ -f "witness" ]]
+	then
+		rm "witness"
+	fi
+
 	exit $1
 }
 
 COMPUTE_WITNESS=1
+WITNESS_VERBOSE=0
 UPDATE_ALL=0
 
 for arg in "$@"
@@ -16,6 +23,10 @@ do
 	case $arg in
 		--no-witness)
 		COMPUTE_WITNESS=0
+		shift
+		;;
+		--witness-verbose)
+		WITNESS_VERBOSE=1
 		shift
 		;;
 		-u|--update)
@@ -70,7 +81,12 @@ if [[ COMPUTE_WITNESS -eq 1 ]]
 then
 	echo "Computing witness for $1..."
 
-	cat $tmpfile | zokrates compute-witness --stdin --abi
+	ZK_EXTRA=""
+	if [[ WITNESS_VERBOSE -eq 1 ]]
+	then
+		ZK_EXTRA=" --verbose"
+	fi
+	cat $tmpfile | zokrates compute-witness --stdin --abi $ZK_EXTRA
 
 	if [ $? -eq 0 ]; then
 		echo "OK"
