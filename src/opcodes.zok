@@ -144,39 +144,34 @@ def push(State s, Program p) -> State:
 	bool e = !s.running || !hasAtMost::<l>(s.stack)
 	return if e then error(s) else push_check_1(s, p) fi
 
-def dup1_true(State s) -> State:
-	s.stack = writeTop(s.stack, first(s.stack))
+def dup_true<N>(State s) -> State:
+	u32 q = N
+	s.stack = writeTop(s.stack, nth::<q>(s.stack))
 	return s
+
+def dup<N>(State s) -> State:
+	u32 l = STACK_SIZE - 2
+	bool e = !s.running || !hasAtLeast::<N>(s.stack) || !hasAtMost::<l>(s.stack)
+	return if e then error(s) else dup_true::<N>(s) fi
 
 def dup1(State s) -> State:
-	u32 l = STACK_SIZE - 2
-	bool e = !s.running || !hasAtLeast::<1>(s.stack) || !hasAtMost::<l>(s.stack)
-	return if e then error(s) else dup1_true(s) fi
-
-def dup2_true(State s) -> State:
-	s.stack = writeTop(s.stack, second(s.stack))
-	return s
+	return dup::<1>(s)
 
 def dup2(State s) -> State:
-	u32 l = STACK_SIZE - 2
-	bool e = !s.running || !hasAtLeast::<2>(s.stack) || !hasAtMost::<l>(s.stack)
-	return if e then error(s) else dup2_true(s) fi
-
-def dup3_true(State s) -> State:
-	s.stack = writeTop(s.stack, third(s.stack))
-	return s
+	return dup::<2>(s)
 
 def dup3(State s) -> State:
-	u32 l = STACK_SIZE - 2
-	bool e = !s.running || !hasAtLeast::<3>(s.stack) || !hasAtMost::<l>(s.stack)
-	return if e then error(s) else dup3_true(s) fi
+	return dup::<3>(s)
 
-def swap1_true(State s) -> State:
-	u32 temp = second(s.stack)
+def swap_true<N>(State s) -> State:
+	u32 temp = nth<N + 1>(s.stack)
 	s.stack = write::<2>(s.stack, first(s.stack))
 	s.stack = write::<1>(s.stack, temp)
-	return s
+
+def swap<N>(State s) -> State:
+	u32 q = N + 1
+	bool e = !s.running || !hasAtLeast::<q>(s.stack)
+	return if e then error(s) else swap_true::<N>(s) fi
 
 def swap1(State s) -> State:
-	bool e = !s.running || !hasAtLeast::<2>(s.stack) || !hasAtLeast::<2>(s.stack)
-	return if e then error(s) else swap1_true(s) fi
+	return swap::<1>(s)
