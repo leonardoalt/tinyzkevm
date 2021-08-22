@@ -12,4 +12,4 @@ sub
 push32 3
 jump
 stop
-// values: 1
+// values: 4

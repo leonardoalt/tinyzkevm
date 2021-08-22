@@ -5,3 +5,6 @@ compile:
 
 test: compile
 	./run_all.sh
+
+clean:
+	rm abi.json out

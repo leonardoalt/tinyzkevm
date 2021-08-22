@@ -75,7 +75,7 @@ def main(u32 memoryHash, u32 stackHash, Program program, private Calldata callda
 	endfor
 
 	// Execution should have stopped without error.
-	assert(!s.running)
+	//assert(!s.running)
 	assert(!s.error)
 
 	return s
